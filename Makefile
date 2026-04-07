@@ -3,7 +3,7 @@ PROGRAM=main
 TRACE=.install_trace
 ENV=fly_in_env
 
-install $(TRACE) :
+install $(TRACE) : pyproject.toml
 	python3 -m venv $(ENV) && \
 	. $(ENV)/bin/activate && \
 	pip install --upgrade pip && \
