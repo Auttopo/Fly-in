@@ -1,0 +1,7 @@
+[project]
+name = "Fly-in"
+version = "0.0.1"
+dependencies = [
+		"mypy",
+		"flake8",
+]

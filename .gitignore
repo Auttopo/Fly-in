@@ -1,0 +1,5 @@
+.install_trace
+uv_lock
+__pycache__
+__pycache__/*
+.mypy_cache
