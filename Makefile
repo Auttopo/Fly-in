@@ -14,6 +14,10 @@ run : $(TRACE)
 	. $(ENV)/bin/activate && \
 	python3 -m $(PROGRAM) $(FILE)
 
+run-trace : $(TRACE)
+	. $(ENV)/bin/activate && \
+	python3 -m $(PROGRAM) $(FILE) traceback
+
 debug :
 	. $(ENV)/bin/activate && \
 	python3 -m pdb $(PROGRAM) $(FILE)

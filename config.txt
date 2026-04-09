@@ -1,1 +1,2 @@
-cou cou toi
+hub:
+hub: truc 1 2 [zone=normale color=White]
