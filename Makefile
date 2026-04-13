@@ -37,11 +37,11 @@ fclean:
 lint :
 	. $(ENV)/bin/activate && \
 	python3 -m flake8 --exclude $(ENV),mlx_files; \
-	python3 -m mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+	python3 -m mypy . --explicit-package-bases --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
 lint-strict :
 	. $(ENV)/bin/activate && \
 	python3 -m flake8 --exclude $(ENV),mlx_files; \
-	python3 -m mypy . --strict
+	python3 -m mypy . --explicit-package-bases --strict
 
 .PHONY : install run debug clean fclean lint lint-strict

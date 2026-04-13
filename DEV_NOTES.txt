@@ -1,0 +1,25 @@
+Set priority
+
+DIMINUE NOD MAXWHEN PASSED ON
+
+
+
+
+CONNECTION = 1
+HUB = 2
+START_HUB = 3
+END_HUB = 4
+
+LINK = 0
+FTYPE = 1
+DIST = 2
+MAX = 3
+DRONES = 4
+PRIOR = 5
+
+ZONE = 6
+NAME = 7
+XY = 8
+COLOR = 9
+
+TOTAL = 10

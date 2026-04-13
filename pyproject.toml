@@ -5,4 +5,7 @@ dependencies = [
 		"mypy",
 		"flake8",
 		"pydantic",
+		"panda3d",
+		"ursina",
+		"blender",
 ]
