@@ -14,14 +14,15 @@ MAX = 2
 DRONES = 3
 COST = 4
 FUTUR = 5
+TWIN = 6
 # display core
-FTYPE = 6
-ZONE = 7
-NAME = 8
-XY = 9
-COLOR = 10
+FTYPE = 7
+ZONE = 8
+NAME = 9
+XY = 10
+COLOR = 11
 # init core
-TOTAL = 11
+TOTAL = 12
 
 
 class ParserError(Exception):
@@ -65,11 +66,14 @@ class FlyinParser():
 
         self.all_data: list[list[Any]] = []
         self.all_links: set[frozenset[str]] = set()
+        self.all_bridge: list[list[Any]] = []
         self.one_start: bool = False
         self.one_end: bool = False
         self.lnbr: int = 0
         self.nb_drones: int = 0
         self.futur = self.CommonData(0)
+        self.start: list[Any]
+        self.end: list[Any]
 
         if not exists(file_name):
             raise ParserError(f"the file '{file_name}' do not exist")
@@ -102,6 +106,8 @@ class FlyinParser():
     def create_nod(self) -> list[Any]:
         """ create a basic nod for the graph """
         nod: list[Any] = [None for _ in range(TOTAL)]
+        nod[DRONES] = 0
+        nod[TWIN] = []
         nod[LINK] = []
         nod[DIST] = 0
         nod[COST] = 1
@@ -240,7 +246,7 @@ class FlyinParser():
 
     def link_bridge(
             self, dest: list[Any], src: list[Any],
-            cost: int, shared_max: Any) -> None:
+            cost: int, shared_max: Any) -> list[Any]:
         """ link a nod to another  """
 
         bridge: list[Any] = self.create_nod()
@@ -248,6 +254,9 @@ class FlyinParser():
         bridge[MAX] = shared_max
         bridge[COST] = cost
         src[LINK].append(bridge)
+
+        self.all_bridge.append(bridge)
+        return bridge
 
     def linking(self, name1: str, name2: str, max_drones: int) -> None:
         """ linking properly two nodes """
@@ -258,19 +267,36 @@ class FlyinParser():
         nod_2: list[Any] = next(
                 (elem for elem in self.all_data if elem[NAME] == name2))
 
+        x1,y1 = nod_1[XY]
+        x2,y2 = nod_2[XY]
+        midx: int = (x1 + x2) / 2
+        midy: int = (y1 + y2) / 2
+        sep: int = 0.015
+    
         shared_max = self.CommonData(max_drones)
         if nod_1[ZONE] == "blocked" or nod_2[ZONE] == "blocked":
             return
 
+        cost: float = 0
         if nod_1[ZONE] == "restricted":
-            self.link_bridge(nod_1, nod_2, 1, shared_max)
-        else:
-            self.link_bridge(nod_1, nod_2, 0, shared_max)
+            cost = 1
+        elif nod_1[ZONE] == "priority":
+            cost = -0.5
+        bridge = self.link_bridge(nod_1, nod_2, cost, shared_max)
+        bridge[XY] = (midx + sep, midy + sep)
+        bridge[ZONE] = nod_1[ZONE]
 
+        cost = 0
         if nod_2[ZONE] == "restricted":
-            self.link_bridge(nod_2, nod_1, 1, shared_max)
-        else:
-            self.link_bridge(nod_2, nod_1, 0, shared_max)
+            cost = 1
+        elif nod_2[ZONE] == "priority":
+            cost = -0.5
+        bridge2 = self.link_bridge(nod_2, nod_1, cost, shared_max)
+        bridge2[XY] = (midx - sep, midy - sep)
+        bridge2[ZONE] = nod_2[ZONE]
+        bridge[TWIN] = bridge2
+        bridge2[TWIN] = bridge
+
 
     def connection_parser(self, data: list[str]) -> None:
         """ parse data of a connection setting """
@@ -361,6 +387,7 @@ class FlyinParser():
                 clean_data = self.hub_parser(data)
                 clean_data[FTYPE] = START_HUB
                 self.all_data.append(clean_data)
+                self.start = clean_data
             case "end_hub":
                 if self.one_end:
                     ParserError.add_line(
@@ -369,6 +396,7 @@ class FlyinParser():
                 clean_data = self.hub_parser(data)
                 clean_data[FTYPE] = END_HUB
                 self.all_data.append(clean_data)
+                self.end = clean_data
             case _:
                 ParserError.add_line(
                         self.lnbr,

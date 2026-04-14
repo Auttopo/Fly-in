@@ -8,4 +8,5 @@ dependencies = [
 		"panda3d",
 		"ursina",
 		"blender",
+		"numpy",
 ]

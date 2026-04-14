@@ -18,11 +18,12 @@ class FlyinAlgorithm:
         start[FP.DIST] = 1
 
         self.resolve(start)
+        print("TOTAL TURNS", len(self.states))
 
     def create_futur(self) -> None:
         next_nod: FlyinParser = copy.deepcopy(self.base)
         self.states[len(self.states) - 1].linking_futur(next_nod.all_data)
-        self.states[len(self.states) - 1][FP.FUTUR].common = 1
+        self.states[len(self.states) - 1].futur.common = 1
         self.states.append(next_nod)
         
 
@@ -36,17 +37,55 @@ class FlyinAlgorithm:
 
         while tree:
             active = tree.pop(0)
-            new_value = active[FP.DIST]
+            value = active[FP.DIST]
 
             for nod in active[FP.LINK]:
                 cost = nod[FP.COST]
 
-                if nod[FP.DRONES] == nod[FP.MAX].common and \
-                        nod[FP.FUTUR].common == 0:
-                    self.create_futur()
-                    tree.append(nod)
+                if nod[FP.DRONES] == nod[FP.MAX].common:
+                    if nod[FP.FUTUR].common == 0 and nod[FP.FTYPE] != FP.START_HUB:
+                        self.create_futur()
+                        tree.append(nod)
+                else: 
+                    if nod[FP.DIST] > value + cost or nod[FP.DIST] == 0:
+                        nod[FP.DIST] = value + cost
+                        tree.append(nod)
 
-                if nod[FP.DIST] > new_value + cost or nod[FP.DIST] == 0:
-                    nod[FP.DIST] = new_value + cost
-                    tree.append(nod)
-        
+        i: int = len(self.states) - 1
+        shorter: None | list[Any] = self.states[i].end
+        while i >= 0:
+            end = self.states[i].end
+            if end[FP.DIST] < shorter[FP.DIST]:
+                shorter = end
+            i -= 1
+
+        active = shorter
+        path: list[Any] = [active]
+        value:float = 0
+        while 1:
+            if active == None:
+                raise Exception("error during path retrieving")
+            print(value)
+
+            value = active[FP.DIST]
+            shorter = None
+            
+            for nod in active[FP.LINK]:
+                if nod[FP.TWIN]:
+                    if nod[FP.TWIN][FP.DIST] < value:
+                        shorter = nod
+                else:
+                    if nod[FP.DIST] < value:
+                        shorter = nod
+            if value == 1:
+                break
+            active = shorter
+            path.append(shorter)
+        for elem in path:
+            if elem[FP.COST] == 1:
+                elem[FP.DRONES] += 1
+            else:
+                elem[FP.MAX].common -= 1
+
+            
+         

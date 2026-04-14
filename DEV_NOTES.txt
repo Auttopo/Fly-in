@@ -3,7 +3,13 @@ Set priority
 DIMINUE NOD MAXWHEN PASSED ON
 
 
+preparer le live coding
 
+Dans algo je prend le chemin le plus court 
+selection du premier chemin le pls court dans le reverse save + opti peux etre ?
+
+
+nod to hub < ??
 
 CONNECTION = 1
 HUB = 2

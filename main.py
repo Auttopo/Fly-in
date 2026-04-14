@@ -14,7 +14,7 @@ def main() -> None:
             raise ParserError("Use as first argument a configuration file")
         obj: FlyinParser = FlyinParser(sys.argv[1])
         resolved: FlyinAlgorithm = FlyinAlgorithm(obj)
-        FlyinDisplay(resolved.get_map())
+        FlyinDisplay(resolved.states)
     except Exception as e:
         print(f"An error occured :\n{e}", file=sys.stderr)
         if len(sys.argv) > 2 and sys.argv[2] == "traceback":
