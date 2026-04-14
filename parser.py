@@ -13,16 +13,17 @@ DIST = 1
 MAX = 2
 DRONES = 3
 COST = 4
-FUTUR = 5
-TWIN = 6
+PAST = 5
+FUTUR = 6
+TWIN = 7
 # display core
-FTYPE = 7
-ZONE = 8
-NAME = 9
-XY = 10
-COLOR = 11
+FTYPE = 8
+ZONE = 9
+NAME = 10
+XY = 11
+COLOR = 12
 # init core
-TOTAL = 12
+TOTAL = 13
 
 
 class ParserError(Exception):
@@ -235,14 +236,19 @@ class FlyinParser():
         return clean_data
 
 
-    def linking_futur(self, futur: list[Any]) -> None:
+    def linking_futur(self, futur: list[Any], operator: list[Any]) -> list[Any]:
         """ linking all nodes to futur state """
 
         nod_2: list[Any]
+        new_operator: list[Any]
         for elem in self.all_data:
             nod_2 = next(
                     (nod for nod in futur if nod[NAME] == elem[NAME]))
             elem[LINK].append(nod_2)
+            nod_2[PAST] = elem
+            if elem == operator:
+                new_operator = nod_2
+        return new_operator
 
     def link_bridge(
             self, dest: list[Any], src: list[Any],

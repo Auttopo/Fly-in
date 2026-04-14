@@ -88,10 +88,11 @@ class InputHandler(Entity):
                 nod.visible = not nod.visible
 
     def update(self):
+        self.player.speed = 40
         if held_keys['space']:
-            self.player.y += 5 * time.dt
+            self.player.y += 40 * time.dt
         if held_keys['shift']:
-            self.player.y -= 5 * time.dt
+            self.player.y -= 40 * time.dt
 
 
 class FlyinDisplay:
@@ -107,7 +108,7 @@ class FlyinDisplay:
         mycolors_dist = get_type_color()
         self.nods: list[Any] = []
         self.nods_dist: list[Any] = []
-        self.mydata = self.origin_data[0]
+        self.mydata = self.origin_data[14]
 
         link_h:int = 3
         espace = 8
@@ -149,12 +150,12 @@ class FlyinDisplay:
 
             self.nods_dist.append(nod)
         
-        # DIST NBR AND LINES
-
+        # LINES CONNECTION
             for link in elem[FP.LINK]:
                 x2, y2 = link[FP.XY]
                 arcs_list.append(arc_entity(x, link_h, y, x2 * espace, 1, y2 * espace))
 
+        # DRONES BALLS
             drones = elem[FP.DRONES]
             if drones:
                 txt = Entity(position=(x, 3.2, y), billboard=True)

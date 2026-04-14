@@ -8,6 +8,7 @@ preparer le live coding
 Dans algo je prend le chemin le plus court 
 selection du premier chemin le pls court dans le reverse save + opti peux etre ?
 
+Check nb drones <= max start
 
 nod to hub < ??
 
