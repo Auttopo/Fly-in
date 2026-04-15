@@ -140,6 +140,7 @@ class FlyinParser():
             "crimson",
             "rainbow",
             "beige"]
+        self.max_log = True
 
         duplicate_ermsg = "duplicate parameter not alowed"
         for elem in data:
@@ -184,6 +185,7 @@ class FlyinParser():
         if not clean_data[ZONE]:
             clean_data[ZONE] = "normal"
         if not clean_data[MAX]:
+            self.max_log = False
             clean_data[MAX] = self.CommonData(1)
 
     def hub_parser(self, data: list[str]) -> list[Any]:
@@ -396,6 +398,8 @@ class FlyinParser():
                             self.lnbr, "only one start_hub is possible")
                 self.one_start = True
                 clean_data = self.hub_parser(data)
+                if not self.max_log:
+                    clean_data[MAX].common = self.nb_drones
                 if clean_data[MAX].common < self.nb_drones:
                     ParserError.add_line(
                             self.lnbr, "max_drones on start_hub impossible for drones number")
@@ -408,6 +412,11 @@ class FlyinParser():
                             self.lnbr, "only one end_hub is possible")
                 self.one_end = True
                 clean_data = self.hub_parser(data)
+                if not self.max_log:
+                    clean_data[MAX].common = self.nb_drones
+                if clean_data[MAX].common < self.nb_drones:
+                    ParserError.add_line(
+                            self.lnbr, "max_drones on end_hub impossible for drones number")
                 clean_data[FTYPE] = END_HUB
                 self.all_data.append(clean_data)
                 self.end = clean_data

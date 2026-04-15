@@ -112,6 +112,9 @@ class FlyinAlgorithm:
 
                 active = shorter
                 path.append(shorter)
+            while shorter[FP.PAST]:
+                path.append(shorter)
+                shorter = shorter[FP.PAST]
 
             turns: int = 0
             futur: int = path[0][FP.FUTUR]
@@ -125,7 +128,6 @@ class FlyinAlgorithm:
                 if elem[FP.COST] == 1:
                     elem[FP.DRONES].common += 1
                     turns += 1
-
 
             print(turns, "path finded")
 
