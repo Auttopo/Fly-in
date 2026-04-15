@@ -147,6 +147,13 @@ class FlyinDisplay:
         self.all_dist: list[Any] = []
         self.all_max: list[Any] = []
 
+        ui = Text(
+            text=str(self.i),
+            texture_scale=(50, 50),
+            scale=1,
+            origin=(-9,0))
+        self.rest.append(ui)
+
         for elem in self.mydata.all_data:
         # COLORED BASIC HUBS
             x,y = elem[FP.XY]
