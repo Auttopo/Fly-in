@@ -71,28 +71,58 @@ def get_type_color() -> dict[tuple[int, int, int]]:
 
 class InputHandler(Entity):
 
-    def __init__(self, player: Any, nods: list[Any], nods_dist: list[Any]) -> None:
+    def __init__(self, display: Any) -> None:
         super().__init__()
-        self.player = player
-        self.nods = nods
-        self.nods_dist = nods_dist
+        self.d = display
+        self.mycheck = True
+
+    def destroy_all(self) -> None:
+        for nod in self.d.all_dist:
+            destroy(nod)
+        for nod in self.d.all_max:
+            destroy(nod)
+        for nod in self.d.nods:
+            destroy(nod)
+        for nod in self.d.arcs_list:
+            destroy(nod)
+        for nod in self.d.rest:
+            destroy(nod)
+        self.mycheck = False
 
     def input(self, key: Any) -> None:
         if key == 'escape':
             application.quit()
-        if key == 'o':
-            for nod in self.nods:
+        if key == 'o' and self.mycheck:
+            for nod in self.d.nods_dist:
                 nod.visible = not nod.visible
-        if key == 'o':
-            for nod in self.nods_dist:
+            for nod in self.d.nods:
                 nod.visible = not nod.visible
+        if key == 'i' and self.mycheck:
+            for nod in self.d.all_dist:
+                nod.visible = not nod.visible
+            for nod in self.d.all_max:
+                nod.visible = not nod.visible
+        if key == 'n':
+            if self.d.i <= len(self.d.states) - 2:
+                self.d.i += 1
+                self.destroy_all()
+                self.d.set_state()
+                self.mycheck = True
+        if key == 'b':
+            if self.d.i > 0:
+                self.d.i -= 1
+                self.destroy_all()
+                self.d.set_state()
+                self.mycheck = True
+
+
 
     def update(self):
-        self.player.speed = 40
+        self.d.player.speed = 40
         if held_keys['space']:
-            self.player.y += 40 * time.dt
+            self.d.player.y += 40 * time.dt
         if held_keys['shift']:
-            self.player.y -= 40 * time.dt
+            self.d.player.y -= 40 * time.dt
 
 
 class FlyinDisplay:
@@ -102,17 +132,20 @@ class FlyinDisplay:
         pass
 
     
-    def show_state(self) -> Any:
+    def set_state(self) -> None:
 
         mycolors = get_colors()
         mycolors_dist = get_type_color()
         self.nods: list[Any] = []
+        self.rest: list[Any] = []
         self.nods_dist: list[Any] = []
-        self.mydata = self.origin_data[14]
+        self.mydata = self.states[self.i]
 
         link_h:int = 3
         espace = 8
         arcs_list: list[Any] = []
+        self.all_dist: list[Any] = []
+        self.all_max: list[Any] = []
 
         for elem in self.mydata.all_data:
         # COLORED BASIC HUBS
@@ -126,12 +159,17 @@ class FlyinDisplay:
                 color=color.rgb(col[0], col[1], col[2]),
                 position=(x, 1, y)
             )
+            self.nods.append(nod)
 
             str_dist = str(elem[FP.DIST])
             dist = Entity(position=(x, 2.5, y), billboard=True)
-            Text(text=str_dist, parent=dist, scale=20, origin=(0,0))
-
-            self.nods.append(nod)
+            d = Text(text=str_dist, parent=dist, scale=20, origin=(0,0))
+            self.all_dist.append(d)
+            str_dist = str(elem[FP.MAX].common)
+            dist = Entity(position=(x, 2.5, y), billboard=True)
+            m = Text(text=str_dist, parent=dist, scale=20, origin=(0,0))
+            m.visible = not m.visible
+            self.all_max.append(m)
 
 
         # ZONE TYPE COLOR HUBS
@@ -142,12 +180,8 @@ class FlyinDisplay:
                 color=color.rgb(col[0], col[1], col[2]),
                 position=(x, 1, y)
             )
-
-            str_dist = str(elem[FP.DIST])
-            dist = Entity(position=(x, 2.5, y), billboard=True)
-            Text(text=str_dist, parent=dist, scale=20, origin=(0,0))
+            self.rest.append(nod)
             nod.visible = not nod.visible
-
             self.nods_dist.append(nod)
         
         # LINES CONNECTION
@@ -156,11 +190,8 @@ class FlyinDisplay:
                 arcs_list.append(arc_entity(x, link_h, y, x2 * espace, 1, y2 * espace))
 
         # DRONES BALLS
-            drones = elem[FP.DRONES]
+            drones = elem[FP.DRONES].common
             if drones:
-                txt = Entity(position=(x, 3.2, y), billboard=True)
-                Text(text=str(drones), parent=txt, scale=20, origin=(0,0))
-
                 drones_balls = Entity(
                     model='sphere',
                     world_space=True,
@@ -168,13 +199,20 @@ class FlyinDisplay:
                     texture='shore',
                     position=(x, 3, y)
                 )
+                self.rest.append(drones_balls)
+                txt = Entity(position=(x, 3.2, y), billboard=True)
+                d_n = Text(text=str(drones), parent=txt, scale=20, origin=(0,0))
+                self.rest.append(d_n)
 
         # LINKS COLORED
         for elem in self.mydata.all_bridge:
+            drones = elem[FP.DRONES].common
+
             x,y = elem[FP.XY]
             x = x * espace
             y = y * espace
             col = mycolors_dist[elem[FP.ZONE]]
+
             nod = Entity(
                 model='sphere',
                 scale=0.4,
@@ -182,20 +220,40 @@ class FlyinDisplay:
                 color=color.rgb(col[0], col[1], col[2]),
                 position=(x, link_h, y)
             )
+            self.rest.append(nod)
+
+            if drones:
+                drones_balls = Entity(
+                    model='sphere',
+                    world_space=True,
+                    scale=0.3,
+                    texture='shore',
+                    position=(x, link_h + 1.5, y)
+                )
+                self.rest.append(drones_balls)
+                txt = Entity(position=(x, link_h + 1.7, y), billboard=True)
+                d_n = Text(text=str(drones), parent=txt, scale=20, origin=(0,0))
+                self.rest.append(d_n)
 
             str_dist = str(elem[FP.DIST])
             dist = Entity(position=(x, link_h + 1, y), billboard=True)
-            Text(text=str_dist, parent=dist, scale=20, origin=(0,0))
+            d = Text(text=str_dist, parent=dist, scale=20, origin=(0,0))
+            self.all_dist.append(d)
+            str_dist = str(elem[FP.MAX].common)
+            dist = Entity(position=(x, link_h + 1, y), billboard=True)
+            m = Text(text=str_dist, parent=dist, scale=20, origin=(0,0))
+            m.visible = not m.visible
+            self.all_max.append(m)
 
         self.arcs_list = arcs_list
-        return arcs_list
 
-    def __init__(self, origin_data: list[str]) -> None:
+    def __init__(self, states: list[str]) -> None:
         """ init and display the graph """
+        self.i: int = 0
         app = Ursina()
         Sky()
 
-        self.origin_data = origin_data
+        self.states = states
         # sol
         ground = Entity(
             model='plane',
@@ -204,16 +262,13 @@ class FlyinDisplay:
             texture_scale=(50, 50),
             collider='box'
         )
-        
-
-        self.show_state()
-
 
         window.exit_button.visible = False
 
-        # joueur FPS
-        player = FirstPersonController()
-        player.gravity = 0
-        InputHandler(player, self.nods, self.nods_dist) 
+        temp = self.i
+        self.set_state()
+        self.player = FirstPersonController()
+        self.player.gravity = 0
+        InputHandler(self) 
         app.run()
     

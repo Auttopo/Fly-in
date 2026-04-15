@@ -14,9 +14,9 @@ class FlyinAlgorithm:
        # self.next: FlyinParser = copy.deepcopy(self.base)
 
         start = self.states[0].get_one(FP.START_HUB)
-        start[FP.DRONES] = self.states[0].nb_drones
+        start[FP.DRONES].common = self.states[0].nb_drones
         self.resolve(start)
-        print("TOTAL TURNS", len(self.states))
+        print("TOTAL STATES", len(self.states))
         print("DONES ARRIVED", len(self.all_path))
 
     def create_futur(self, operator: list[Any]) -> list[Any]:
@@ -29,21 +29,39 @@ class FlyinAlgorithm:
 
         return new_operator
         
-
-    def get_map(self) -> list[Any]:
-        """return the 3d graph"""
-        return self.base.all_data
-
     def max_check(self, nod: list[Any]) -> bool:
-        if nod[FP.DRONES] == nod[FP.MAX].common or nod[FP.MAX].common == 0:
+        if nod[FP.DRONES].common == nod[FP.MAX].common or nod[FP.MAX].common == 0:
             return False
         return True
+
+    def prepare_futur(self, nod: list[Any], tree: list[Any]) -> None:
+
+        if nod[FP.FUTUR].common == 0:
+            unblocked = self.create_futur(nod)
+            unblocked[FP.DIST] = nod[FP.DIST] + unblocked[FP.COST]
+            tree.append(unblocked)
+        else:
+            print("DEB --!")
+            for elem in nod[FP.LINK]:
+                print(elem[FP.DIST])
+            print(nod[FP.DIST])
+            print("DEB --!")
+            futur_nod = next(new for new in nod[FP.LINK] if new[FP.FUTUR].common != nod[FP.FUTUR].common)
+            if self.max_check(futur_nod):
+                if futur_nod[FP.DIST] > nod[FP.DIST] + futur_nod[FP.COST] or futur_nod[FP.DIST] == 0:
+                    futur_nod[FP.DIST] = nod[FP.DIST] + futur_nod[FP.COST]
+                    tree.append(futur_nod)
+            print("DEB --!")
+            for elem in nod[FP.LINK]:
+                print(elem[FP.DIST])
+            print(nod[FP.DIST])
+            print("DEB --!")
 
     def resolve(self, entry: list[Any]) -> None:
 
         tree: list[Any] = [entry]
         self.all_path: list[list[Any]] = []
-        drones = entry[FP.DRONES]
+        drones = entry[FP.DRONES].common
         
         blocked: list[Any]
 
@@ -53,28 +71,23 @@ class FlyinAlgorithm:
             entry[FP.DIST] = 1
             while tree:
                 active = tree.pop(0)
+                if active[FP.DIST] == 0:
+                    raise Exception("traitor among us")
                 value = active[FP.DIST]
                 for nod in list(active[FP.LINK]):
                     cost = nod[FP.COST]
-                    if not self.max_check(nod) and not nod[FP.TWIN]:
-                        if nod[FP.FUTUR].common == 0:
-                            nod = active[FP.TWIN][FP.LINK][0]
-                            unblocked = self.create_futur(nod)
-                            unblocked[FP.DIST] = nod[FP.DIST] + unblocked[FP.COST]
-                            tree.append(unblocked)
-                        else:
-                            nod = active[FP.TWIN][FP.LINK][0]
-                            futur_nod = next(new for new in nod[FP.LINK] if new[FP.FUTUR].common != nod[FP.FUTUR].common)
-                            if futur_nod[FP.DIST] > nod[FP.DIST] + unblocked[FP.COST] or futur_nod[FP.DIST] == 0:
-                                futur_nod[FP.DIST] = nod[FP.DIST] + unblocked[FP.COST]
-                                tree.append(futur_nod)
-                    else: 
+                    if self.max_check(nod):
                         if nod[FP.DIST] > value + cost or nod[FP.DIST] == 0:
                             nod[FP.DIST] = value + cost
                             tree.append(nod)
+                    else: 
+                        if active[FP.TWIN]:
+                            self.prepare_futur(active[FP.TWIN][FP.LINK][0], tree)
+                        else:
+                            self.prepare_futur(active, tree)
 
             i: int = len(self.states) - 1
-            shorter: None | list[Any] = self.states[i].end
+            shorter: list[Any] = self.states[i].end
             while i >= 0:
                 end = self.states[i].end
                 if end[FP.DIST] != 0 and end[FP.DIST] < shorter[FP.DIST]:
@@ -84,11 +97,19 @@ class FlyinAlgorithm:
             active = shorter
             path: list[Any] = [active]
 
+            if drones == 2:
+                for state in self.states:
+                    print(f"---------{state.all_data[0][FP.FUTUR].common}----------------")
+                    for elem in state.all_data:
+                        print(elem[FP.DIST])
+                    for elem in state.all_bridge:
+                        print(elem[FP.DIST])
+
+                return
             while 1:
                 if active == None:
                     raise Exception(f"error during path retrieving {drones}")
                 shorter = active[FP.LINK][0]
-                pass_check: bool = False
                 for nod in active[FP.LINK]:
                     if self.max_check(nod) and nod[FP.DIST] != 0:
                         if nod[FP.FUTUR].common == active[FP.FUTUR].common:
@@ -103,21 +124,30 @@ class FlyinAlgorithm:
                         active[FP.PAST][FP.DIST] != 0 and \
                             active[FP.PAST][FP.DIST] < shorter[FP.DIST]:
                         shorter = active[FP.PAST]
-                        pass_check = True
-                if not pass_check:
-                    shorter[FP.MAX].common -= 1
-                    if shorter[FP.MAX].common == -1:
-                        raise Exception(f"impossible path occured {drones}")
+            #    if not pass_check:
+            #        shorter[FP.MAX].common -= 1
+            #        if shorter[FP.MAX].common == -1:
+             #           raise Exception(f"impossible path occured {drones}")
                 if shorter[FP.DIST] == 1:
                     break
                 active = shorter
                 path.append(shorter)
 
+            turns: int = 0
+            futur: int = path[0][FP.FUTUR]
             for elem in path:
+                if elem[FP.FUTUR] == futur:
+                    elem[FP.MAX].common -= 1
+                    futur = elem[FP.FUTUR]
+                if elem[FP.MAX].common == -1:
+                    raise Exception(f"impossible path occured {drones}")
+
                 if elem[FP.COST] == 1:
-                    elem[FP.DRONES] += 1
-            print(len(path), "path finded")
-            print(len(self.all_path), "path tot")
+                    elem[FP.DRONES].common += 1
+                    turns += 1
+
+
+            print(turns, "path finded")
 
             self.all_path.append(path[::-1])
             drones -= 1
@@ -128,6 +158,5 @@ class FlyinAlgorithm:
                     elem[FP.DIST] = 0
                 for elem in timeline.all_bridge:
                     elem[FP.DIST] = 0
-                    
-            
+        
          

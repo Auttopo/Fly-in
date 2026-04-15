@@ -1,3 +1,13 @@
+
+
+PAS MODIF MAX DRONES ARRIVER
+
+verif futur max
+if nod blocker ? create futur ??
+
+
+nodes max - ???
+
 Set priority
 
 DIMINUE NOD MAXWHEN PASSED ON

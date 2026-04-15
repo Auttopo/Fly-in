@@ -107,7 +107,7 @@ class FlyinParser():
     def create_nod(self) -> list[Any]:
         """ create a basic nod for the graph """
         nod: list[Any] = [None for _ in range(TOTAL)]
-        nod[DRONES] = 0
+        nod[DRONES] = self.CommonData(0)
         nod[TWIN] = []
         nod[LINK] = []
         nod[DIST] = 0
@@ -246,19 +246,21 @@ class FlyinParser():
                     (nod for nod in futur if nod[NAME] == elem[NAME]))
             elem[LINK].append(nod_2)
             nod_2[PAST] = elem
-            if elem == operator:
+            if elem[NAME] == operator[NAME]:
                 new_operator = nod_2
         return new_operator
 
     def link_bridge(
             self, dest: list[Any], src: list[Any],
-            cost: int, shared_max: Any) -> list[Any]:
+            cost: int, shared_max: Any,
+            name: str) -> list[Any]:
         """ link a nod to another  """
 
         bridge: list[Any] = self.create_nod()
         bridge[LINK].append(dest)
         bridge[MAX] = shared_max
         bridge[COST] = cost
+        bridge[NAME] = name
         src[LINK].append(bridge)
 
         self.all_bridge.append(bridge)
@@ -288,7 +290,8 @@ class FlyinParser():
             cost = 1
         elif nod_1[ZONE] == "priority":
             cost = -0.5
-        bridge = self.link_bridge(nod_1, nod_2, cost, shared_max)
+        bridge = self.link_bridge(nod_1, nod_2, cost, shared_max,
+                                  name1 + name2 + '1')
         bridge[XY] = (midx + sep, midy + sep)
         bridge[ZONE] = nod_1[ZONE]
 
@@ -297,11 +300,13 @@ class FlyinParser():
             cost = 1
         elif nod_2[ZONE] == "priority":
             cost = -0.5
-        bridge2 = self.link_bridge(nod_2, nod_1, cost, shared_max)
+        bridge2 = self.link_bridge(nod_2, nod_1, cost, shared_max,
+                                   name1 + name2 + '2')
         bridge2[XY] = (midx - sep, midy - sep)
         bridge2[ZONE] = nod_2[ZONE]
         bridge[TWIN] = bridge2
         bridge2[TWIN] = bridge
+        bridge[DRONES] = bridge2[DRONES]
 
 
     def connection_parser(self, data: list[str]) -> None:
@@ -391,6 +396,9 @@ class FlyinParser():
                             self.lnbr, "only one start_hub is possible")
                 self.one_start = True
                 clean_data = self.hub_parser(data)
+                if clean_data[MAX].common < self.nb_drones:
+                    ParserError.add_line(
+                            self.lnbr, "max_drones on start_hub impossible for drones number")
                 clean_data[FTYPE] = START_HUB
                 self.all_data.append(clean_data)
                 self.start = clean_data
