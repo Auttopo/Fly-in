@@ -249,7 +249,7 @@ class FlyinDisplay:
 
     def __init__(self, states: list[str]) -> None:
         """ init and display the graph """
-        self.i: int = 0
+        self.i: int = 24
         app = Ursina()
         Sky()
 

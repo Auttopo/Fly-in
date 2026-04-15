@@ -41,21 +41,11 @@ class FlyinAlgorithm:
             unblocked[FP.DIST] = nod[FP.DIST] + unblocked[FP.COST]
             tree.append(unblocked)
         else:
-            print("DEB --!")
-            for elem in nod[FP.LINK]:
-                print(elem[FP.DIST])
-            print(nod[FP.DIST])
-            print("DEB --!")
             futur_nod = next(new for new in nod[FP.LINK] if new[FP.FUTUR].common != nod[FP.FUTUR].common)
             if self.max_check(futur_nod):
                 if futur_nod[FP.DIST] > nod[FP.DIST] + futur_nod[FP.COST] or futur_nod[FP.DIST] == 0:
                     futur_nod[FP.DIST] = nod[FP.DIST] + futur_nod[FP.COST]
                     tree.append(futur_nod)
-            print("DEB --!")
-            for elem in nod[FP.LINK]:
-                print(elem[FP.DIST])
-            print(nod[FP.DIST])
-            print("DEB --!")
 
     def resolve(self, entry: list[Any]) -> None:
 
@@ -97,46 +87,36 @@ class FlyinAlgorithm:
             active = shorter
             path: list[Any] = [active]
 
-            if drones == 2:
-                for state in self.states:
-                    print(f"---------{state.all_data[0][FP.FUTUR].common}----------------")
-                    for elem in state.all_data:
-                        print(elem[FP.DIST])
-                    for elem in state.all_bridge:
-                        print(elem[FP.DIST])
-
-                return
             while 1:
-                if active == None:
-                    raise Exception(f"error during path retrieving {drones}")
-                shorter = active[FP.LINK][0]
+                if active[FP.TWIN]:
+                    shorter = active[FP.TWIN][FP.LINK][0]
+                else:
+                    shorter = active[FP.LINK][0]
+
                 for nod in active[FP.LINK]:
-                    if self.max_check(nod) and nod[FP.DIST] != 0:
-                        if nod[FP.FUTUR].common == active[FP.FUTUR].common:
-                            if nod[FP.TWIN]:
-                                if nod[FP.TWIN][FP.DIST] < shorter[FP.DIST]:
-                                    shorter = nod
-                            else:
-                                if nod[FP.DIST] < shorter[FP.DIST]:
-                                    shorter = nod
-                    if active[FP.PAST] and \
-                        self.max_check(active[FP.PAST]) and \
-                        active[FP.PAST][FP.DIST] != 0 and \
-                            active[FP.PAST][FP.DIST] < shorter[FP.DIST]:
-                        shorter = active[FP.PAST]
-            #    if not pass_check:
-            #        shorter[FP.MAX].common -= 1
-            #        if shorter[FP.MAX].common == -1:
-             #           raise Exception(f"impossible path occured {drones}")
-                if shorter[FP.DIST] == 1:
+                    if self.max_check(nod):
+                        if nod[FP.TWIN]:
+                            nod = nod[FP.TWIN]
+                        if nod[FP.DIST] != 0 and \
+                            nod[FP.FUTUR].common == active[FP.FUTUR].common:
+                            if nod[FP.DIST] < shorter[FP.DIST]:
+                                shorter = nod
+
+                if active[FP.PAST] and \
+                    self.max_check(active[FP.PAST]) and \
+                    active[FP.PAST][FP.DIST] != 0 and \
+                        active[FP.PAST][FP.DIST] < shorter[FP.DIST]:
+                    shorter = active[FP.PAST]
+                if shorter[FP.FTYPE] == FP.START_HUB:
                     break
+
                 active = shorter
                 path.append(shorter)
 
             turns: int = 0
             futur: int = path[0][FP.FUTUR]
             for elem in path:
-                if elem[FP.FUTUR] == futur:
+                if elem[FP.FUTUR] == futur and elem[FP.FTYPE] != FP.END_HUB:
                     elem[FP.MAX].common -= 1
                     futur = elem[FP.FUTUR]
                 if elem[FP.MAX].common == -1:
