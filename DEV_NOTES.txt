@@ -1,44 +1,7 @@
 
 
-ECRIRE LES ZONES EMPRUNTERS
-
-PAS MODIF MAX DRONES ARRIVER
-
-verif futur max
-if nod blocker ? create futur ??
-
-
-nodes max - ???
-
-Set priority
-
-DIMINUE NOD MAXWHEN PASSED ON
-
 
 preparer le live coding
 
-Dans algo je prend le chemin le plus court 
-selection du premier chemin le pls court dans le reverse save + opti peux etre ?
 
-Check nb drones <= max start
 
-nod to hub < ??
-
-CONNECTION = 1
-HUB = 2
-START_HUB = 3
-END_HUB = 4
-
-LINK = 0
-FTYPE = 1
-DIST = 2
-MAX = 3
-DRONES = 4
-PRIOR = 5
-
-ZONE = 6
-NAME = 7
-XY = 8
-COLOR = 9
-
-TOTAL = 10

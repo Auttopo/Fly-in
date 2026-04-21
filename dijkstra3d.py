@@ -17,7 +17,7 @@ class FlyinAlgorithm:
         start[FP.DRONES].common = self.states[0].nb_drones
         self.resolve(start)
         print("TOTAL STATES", len(self.states))
-        print("DONES ARRIVED", len(self.all_path))
+        print("DONES ARRIVED", len(self.all_path), '\n')
 
     def create_futur(self, operator: list[Any]) -> list[Any]:
         new_operator: list[Any]
@@ -51,11 +51,11 @@ class FlyinAlgorithm:
 
         tree: list[Any] = [entry]
         self.all_path: list[list[Any]] = []
-        drones = entry[FP.DRONES].common
-        
+        drones = 1
+        max_drones = self.states[0].nb_drones + 1
         blocked: list[Any]
 
-        while drones:
+        while drones < max_drones:
 
             tree = [entry]
             entry[FP.DIST] = 1
@@ -129,16 +129,20 @@ class FlyinAlgorithm:
                     elem[FP.DRONES].common += 1
                     turns += 1
 
-            print(turns, "path finded")
+            print(f"D{drones}; path finded; duration: {turns} turns")
+            path = path[::-1]
+            for passage in path:
+                print(f"D{drones}-{passage[FP.NAME]} ", end='')
+            print('\n')
+            
 
-            self.all_path.append(path[::-1])
-            drones -= 1
-            if drones == 0:
-                return
-            for timeline in self.states:
-                for elem in timeline.all_data:
-                    elem[FP.DIST] = 0
-                for elem in timeline.all_bridge:
-                    elem[FP.DIST] = 0
+            self.all_path.append(path)
+            drones += 1
+            if drones != max_drones:
+                for timeline in self.states:
+                    for elem in timeline.all_data:
+                        elem[FP.DIST] = 0
+                    for elem in timeline.all_bridge:
+                        elem[FP.DIST] = 0
         
          

@@ -293,7 +293,7 @@ class FlyinParser():
         elif nod_1[ZONE] == "priority":
             cost = -0.5
         bridge = self.link_bridge(nod_1, nod_2, cost, shared_max,
-                                  name1 + name2 + '1')
+                                  name2 + '-' + name1)
         bridge[XY] = (midx + sep, midy + sep)
         bridge[ZONE] = nod_1[ZONE]
 
@@ -303,7 +303,7 @@ class FlyinParser():
         elif nod_2[ZONE] == "priority":
             cost = -0.5
         bridge2 = self.link_bridge(nod_2, nod_1, cost, shared_max,
-                                   name1 + name2 + '2')
+                                   name1 + '-' + name2)
         bridge2[XY] = (midx - sep, midy - sep)
         bridge2[ZONE] = nod_2[ZONE]
         bridge[TWIN] = bridge2
