@@ -4,6 +4,7 @@ import parser as FP
 from typing import Any
 import copy
 
+
 class FlyinAlgorithm:
     """ resolve the graph problem """
 
@@ -11,7 +12,6 @@ class FlyinAlgorithm:
         """ init and resolve the input """
         self.base: FlyinParser = obj
         self.states: list[FlyinParser] = [copy.deepcopy(obj)]
-       # self.next: FlyinParser = copy.deepcopy(self.base)
 
         start = self.states[0].get_one(FP.START_HUB)
         start[FP.DRONES].common = self.states[0].nb_drones
@@ -23,14 +23,18 @@ class FlyinAlgorithm:
         new_operator: list[Any]
 
         next_nod: FlyinParser = copy.deepcopy(self.base)
-        new_operator = self.states[len(self.states) - 1].linking_futur(next_nod.all_data, operator)
+        new_operator = \
+            self.states[
+                        len(self.states) - 1].linking_futur(
+                            next_nod.all_data, operator)
         self.states[len(self.states) - 1].futur.common = len(self.states)
         self.states.append(next_nod)
 
         return new_operator
-        
+
     def max_check(self, nod: list[Any]) -> bool:
-        if nod[FP.DRONES].common == nod[FP.MAX].common or nod[FP.MAX].common == 0:
+        if nod[FP.DRONES].common == \
+                nod[FP.MAX].common or nod[FP.MAX].common == 0:
             return False
         return True
 
@@ -41,9 +45,12 @@ class FlyinAlgorithm:
             unblocked[FP.DIST] = nod[FP.DIST] + unblocked[FP.COST]
             tree.append(unblocked)
         else:
-            futur_nod = next(new for new in nod[FP.LINK] if new[FP.FUTUR].common != nod[FP.FUTUR].common)
+            futur_nod = next(
+                    new for new in nod[FP.LINK]
+                    if new[FP.FUTUR].common != nod[FP.FUTUR].common)
             if self.max_check(futur_nod):
-                if futur_nod[FP.DIST] > nod[FP.DIST] + futur_nod[FP.COST] or futur_nod[FP.DIST] == 0:
+                if futur_nod[FP.DIST] > nod[FP.DIST] + futur_nod[FP.COST] \
+                        or futur_nod[FP.DIST] == 0:
                     futur_nod[FP.DIST] = nod[FP.DIST] + futur_nod[FP.COST]
                     tree.append(futur_nod)
 
@@ -53,7 +60,6 @@ class FlyinAlgorithm:
         self.all_path: list[list[Any]] = []
         drones = 1
         max_drones = self.states[0].nb_drones + 1
-        blocked: list[Any]
 
         while drones < max_drones:
 
@@ -70,9 +76,10 @@ class FlyinAlgorithm:
                         if nod[FP.DIST] > value + cost or nod[FP.DIST] == 0:
                             nod[FP.DIST] = value + cost
                             tree.append(nod)
-                    else: 
+                    else:
                         if active[FP.TWIN]:
-                            self.prepare_futur(active[FP.TWIN][FP.LINK][0], tree)
+                            self.prepare_futur(
+                                    active[FP.TWIN][FP.LINK][0], tree)
                         else:
                             self.prepare_futur(active, tree)
 
@@ -97,8 +104,8 @@ class FlyinAlgorithm:
                     if self.max_check(nod):
                         if nod[FP.TWIN]:
                             nod = nod[FP.TWIN]
-                        if nod[FP.DIST] != 0 and \
-                            nod[FP.FUTUR].common == active[FP.FUTUR].common:
+                        if nod[FP.FUTUR].common == active[FP.FUTUR].common \
+                                and nod[FP.DIST] != 0:
                             if nod[FP.DIST] < shorter[FP.DIST]:
                                 shorter = nod
 
@@ -134,7 +141,6 @@ class FlyinAlgorithm:
             for passage in path:
                 print(f"D{drones}-{passage[FP.NAME]} ", end='')
             print('\n')
-            
 
             self.all_path.append(path)
             drones += 1
@@ -144,5 +150,3 @@ class FlyinAlgorithm:
                         elem[FP.DIST] = 0
                     for elem in timeline.all_bridge:
                         elem[FP.DIST] = 0
-        
-         

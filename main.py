@@ -12,15 +12,21 @@ def create_window(queue: Any, resolved: FlyinAlgorithm, i: list[int]) -> None:
 
     save_stderr = sys.stderr
     sys.stderr = StringIO()
-
+    i_vale: int = i[0]
     import display 
     try:
         disp = display.FlyinDisplay(resolved.states, i)
         disp.show()
     except Exception as e:
-        pass
+        if i[0] == i_vale:
+            i[1] = "stop"
+            queue.put(i)
+            raise
     finally:
         sys.stderr = save_stderr
+        if i[0] == i_vale:
+            i[1] = "stop"
+           # raise Exception("something get wrong during display")
         queue.put(i)
 
 def main() -> None:

@@ -10,33 +10,24 @@ import functools
 class StopUpdate(Exception):
     pass
 
-def arc_entity(x1, y1, z1, x2, y2, z2, bulge=0.2, n=50, **kwargs):
-    dx, dz = x2 - x1, z2 - z1  # plan XZ
-    d = np.sqrt(dx**2 + dz**2)
+def arc_entity(x1, z1, y1, x2, z2, y2):
     
-    if abs(bulge) < 0.01 or d < 0.0001:
-        verts = [Vec3(x1, y1, z1), Vec3(x2, y2, z2)]
-        return Entity(model=Mesh(vertices=verts, mode='line', thickness=2), **kwargs)
-    
-    h = bulge * d / 2
-    r = (d**2 / 4 + h**2) / (2 * h)
-    mx, mz = (x1 + x2) / 2, (z1 + z2) / 2
-    px, pz = -dz / d, dx / d          # perpendiculaire dans XZ
-    cx = mx + (r - h) * px
-    cz = mz + (r - h) * pz
-    angle1 = np.arctan2(z1 - cz, x1 - cx)
-    angle2 = np.arctan2(z2 - cz, x2 - cx)
-    if bulge > 0 and angle2 < angle1:
-        angle2 += 2 * np.pi
-    if bulge < 0 and angle2 > angle1:
-        angle2 -= 2 * np.pi
-    angles = np.linspace(angle1, angle2, n)
+    points: list[Any] = []
+    dx, dy = x2 - x1, y2 - y1  # plan XZ
+    d = np.sqrt(dx**2 + dy**2)
+    ct = d / 2
+   
+    h = d / 2 / 2
+    i: int = 0
+    while i <= 1:
+        px = x2 - (x1 - x2) * i
+        py = y2 - (y1 - y2) * i
+        pz = z1 + (z2 - z1) * i
+        pz = pz + h * (1 - ((i * 2 - 1) ** 2))
+        points.append(Vec3(px, pz, py))
+        i += 0.01
 
-    # Y monte en cloche au milieu
-    ys = np.sin(np.linspace(0, np.pi, n)) * bulge * d + y1
-
-    verts = [Vec3(cx + r * np.cos(a), y, cz + r * np.sin(a)) for a, y in zip(angles, ys)]
-    return Entity(model=Mesh(vertices=verts, mode='line', thickness=2), **kwargs)
+    return Entity(model=Mesh(vertices=points, mode='line', thickness=2))
 
 def get_colors() -> dict[tuple[int, int, int]]:
     data = {
@@ -97,8 +88,6 @@ class InputHandler(Entity):
 
         if key == 'escape':
             self.d.i[1] = "stop"
-            self.destroy_all()
-            self.d.app.destroy()
             self.stop = True
             #application.quit()
 
@@ -116,15 +105,11 @@ class InputHandler(Entity):
         if key == 'n':
             if self.d.i[0] <= len(self.d.states) - 2:
                 self.d.i[0] += 1
-                self.destroy_all()
-                self.d.app.destroy()
                 self.stop = True
 
         if key == 'b':
             if self.d.i[0] > 0:
                 self.d.i[0] -= 1
-                self.destroy_all()
-                self.d.app.destroy()
                 self.stop = True
 
         if key == 'm':
@@ -132,8 +117,6 @@ class InputHandler(Entity):
                 self.d.i[0] += 10
                 if self.d.i[0] >= len(self.d.states):
                     self.d.i[0] = len(self.d.states) - 1
-                self.destroy_all()
-                self.d.app.destroy()
                 self.stop = True
 
         if key == 'v':
@@ -141,14 +124,13 @@ class InputHandler(Entity):
                 self.d.i[0] -= 10
                 if self.d.i[0] < 0:
                     self.d.i[0] = 0
-                self.destroy_all()
-                self.d.app.destroy()
                 self.stop = True
 
     def update(self):
 
         if self.stop:
-            #return
+            self.destroy_all()
+            self.d.app.destroy()
             raise StopUpdate("stop update")
 
         self.d.player.speed = 40
@@ -173,7 +155,7 @@ class FlyinDisplay:
         self.nods_dist: list[Any] = []
         self.mydata = self.states[self.i[0]]
 
-        link_h:int = 3
+        link_h:int = 4
         espace = 8
         arcs_list: list[Any] = []
         self.all_dist: list[Any] = []
@@ -226,7 +208,8 @@ class FlyinDisplay:
         # LINES CONNECTION
             for link in elem[FP.LINK]:
                 x2, y2 = link[FP.XY]
-                arcs_list.append(arc_entity(x, link_h, y, x2 * espace, 1, y2 * espace))
+                if link[FP.NAME] != elem[FP.NAME]:
+                    arcs_list.append(arc_entity(x, link_h, y, x2 * espace, 1, y2 * espace))
 
         # DRONES BALLS
             drones = elem[FP.DRONES].common
@@ -243,7 +226,7 @@ class FlyinDisplay:
                 d_n = Text(text=str(drones), parent=txt, scale=20, origin=(0,0))
                 self.rest.append(d_n)
 
-        # LINKS COLORED
+        # LINKS
         for elem in self.mydata.all_bridge:
             drones = elem[FP.DRONES].common
 
