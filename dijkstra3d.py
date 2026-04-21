@@ -17,7 +17,7 @@ class FlyinAlgorithm:
         start[FP.DRONES].common = self.states[0].nb_drones
         self.resolve(start)
         print("TOTAL STATES", len(self.states))
-        print("DONES ARRIVED", len(self.all_path), '\n')
+        print("DRONES ARRIVED", len(self.all_path), '\n')
 
     def create_futur(self, operator: list[Any]) -> list[Any]:
         new_operator: list[Any]

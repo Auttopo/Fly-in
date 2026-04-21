@@ -10,14 +10,15 @@ import functools
 class StopUpdate(Exception):
     pass
 
-def arc_entity(x1, z1, y1, x2, z2, y2):
+def arc_entity(x1: int, z1: int, y1: int, x2: int, z2: int, y2: int) -> Any:
     
     points: list[Any] = []
+    dx: int
+    dy: int
     dx, dy = x2 - x1, y2 - y1  # plan XZ
-    d = np.sqrt(dx**2 + dy**2)
-    ct = d / 2
+    d: int = np.sqrt(dx**2 + dy**2)
    
-    h = d / 2 / 2
+    h: int = d / 2 / 2
     i: int = 0
     while i <= 1:
         px = x2 - (x1 - x2) * i
@@ -30,7 +31,7 @@ def arc_entity(x1, z1, y1, x2, z2, y2):
     return Entity(model=Mesh(vertices=points, mode='line', thickness=2))
 
 def get_colors() -> dict[tuple[int, int, int]]:
-    data = {
+    data: dict[str, tuple[int, int, int]] = {
     "red": (220, 30, 30),
     "blue": (30, 100, 220),
     "green": (34, 139, 34),
@@ -69,7 +70,7 @@ class InputHandler(Entity):
     def __init__(self, display: Any) -> None:
         super().__init__()
         self.stop: bool = False
-        self.d = display
+        self.d: Any = display
         self.stop = False
 
     def destroy_all(self) -> None:
@@ -154,7 +155,6 @@ class FlyinDisplay:
         self.nods: list[Any] = []
         self.nods_dist: list[Any] = []
         self.mydata = self.states[self.i[0]]
-
         link_h:int = 4
         espace = 8
         arcs_list: list[Any] = []
