@@ -119,7 +119,7 @@ class FlyinAlgorithm:
             turns: int = 0
             futur: int = path[0][FP.FUTUR]
             for elem in path:
-                if elem[FP.FUTUR] == futur and elem[FP.FTYPE] != FP.END_HUB:
+                if elem[FP.FUTUR] == futur and elem[FP.COST] != 1:
                     elem[FP.MAX].common -= 1
                     futur = elem[FP.FUTUR]
                 if elem[FP.MAX].common == -1:

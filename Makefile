@@ -2,17 +2,19 @@ FILE=config.txt
 PROGRAM=main
 TRACE=.install_trace
 ENV=fly_in_env
+PYHTON=python3
+
+run : $(TRACE)
+	. $(ENV)/bin/activate && \
+	python3 -m $(PROGRAM) $(FILE)
 
 install $(TRACE) : pyproject.toml
 	python3 -m venv $(ENV) && \
 	. $(ENV)/bin/activate && \
 	pip install --upgrade pip && \
+	pip install uv && \
 	uv pip install -r pyproject.toml && \
 	touch .install_trace
-
-run : $(TRACE)
-	. $(ENV)/bin/activate && \
-	python3 -m $(PROGRAM) $(FILE)
 
 run-trace : $(TRACE)
 	. $(ENV)/bin/activate && \

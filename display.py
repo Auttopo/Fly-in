@@ -4,7 +4,11 @@ import parser as FP
 from ursina.prefabs.first_person_controller import FirstPersonController
 from typing import Any
 import numpy as np
+import functools
 
+
+class StopUpdate(Exception):
+    pass
 
 def arc_entity(x1, y1, z1, x2, y2, z2, bulge=0.2, n=50, **kwargs):
     dx, dz = x2 - x1, z2 - z1  # plan XZ
@@ -73,8 +77,9 @@ class InputHandler(Entity):
 
     def __init__(self, display: Any) -> None:
         super().__init__()
+        self.stop: bool = False
         self.d = display
-        self.mycheck = True
+        self.stop = False
 
     def destroy_all(self) -> None:
         for nod in self.d.all_dist:
@@ -87,37 +92,65 @@ class InputHandler(Entity):
             destroy(nod)
         for nod in self.d.rest:
             destroy(nod)
-        self.mycheck = False
 
     def input(self, key: Any) -> None:
+
         if key == 'escape':
-            application.quit()
-        if key == 'o' and self.mycheck:
+            self.d.i[1] = "stop"
+            self.destroy_all()
+            self.d.app.destroy()
+            self.stop = True
+            #application.quit()
+
+        if key == 'o':
             for nod in self.d.nods_dist:
                 nod.visible = not nod.visible
             for nod in self.d.nods:
                 nod.visible = not nod.visible
-        if key == 'i' and self.mycheck:
+        if key == 'i':
             for nod in self.d.all_dist:
                 nod.visible = not nod.visible
             for nod in self.d.all_max:
                 nod.visible = not nod.visible
+
         if key == 'n':
-            if self.d.i <= len(self.d.states) - 2:
-                self.d.i += 1
+            if self.d.i[0] <= len(self.d.states) - 2:
+                self.d.i[0] += 1
                 self.destroy_all()
-                self.d.set_state()
-                self.mycheck = True
+                self.d.app.destroy()
+                self.stop = True
+
         if key == 'b':
-            if self.d.i > 0:
-                self.d.i -= 1
+            if self.d.i[0] > 0:
+                self.d.i[0] -= 1
                 self.destroy_all()
-                self.d.set_state()
-                self.mycheck = True
+                self.d.app.destroy()
+                self.stop = True
 
+        if key == 'm':
+            if self.d.i[0] != len(self.d.states) - 1:
+                self.d.i[0] += 10
+                if self.d.i[0] >= len(self.d.states):
+                    self.d.i[0] = len(self.d.states) - 1
+                self.destroy_all()
+                self.d.app.destroy()
+                self.stop = True
 
+        if key == 'v':
+            if self.d.i[0] != 0:
+                self.d.i[0] -= 10
+                if self.d.i[0] < 0:
+                    self.d.i[0] = 0
+                self.destroy_all()
+                self.d.app.destroy()
+                self.stop = True
 
     def update(self):
+
+        if self.stop:
+            #return
+            raise StopUpdate("stop update")
+
         self.d.player.speed = 40
         if held_keys['space']:
             self.d.player.y += 40 * time.dt
@@ -137,9 +170,8 @@ class FlyinDisplay:
         mycolors = get_colors()
         mycolors_dist = get_type_color()
         self.nods: list[Any] = []
-        self.rest: list[Any] = []
         self.nods_dist: list[Any] = []
-        self.mydata = self.states[self.i]
+        self.mydata = self.states[self.i[0]]
 
         link_h:int = 3
         espace = 8
@@ -148,7 +180,7 @@ class FlyinDisplay:
         self.all_max: list[Any] = []
 
         ui = Text(
-            text=str(self.i),
+            text=str(self.i[0]),
             texture_scale=(50, 50),
             scale=1,
             origin=(-9,0))
@@ -254,28 +286,39 @@ class FlyinDisplay:
 
         self.arcs_list = arcs_list
 
-    def __init__(self, states: list[str]) -> None:
+    def __init__(self, states: list[str], i: list[int]) -> None:
         """ init and display the graph """
-        self.i: int = 0
-        app = Ursina()
-        Sky()
-
         self.states = states
-        # sol
-        ground = Entity(
-            model='plane',
-            scale=400,
-            texture='grass',
-            texture_scale=(50, 50),
-            collider='box'
-        )
+        self.rest: list[Any] = []
 
-        window.exit_button.visible = False
+        def show(self) -> None:
+            nonlocal i
+            self.i: int = i
 
-        temp = self.i
-        self.set_state()
-        self.player = FirstPersonController()
-        self.player.gravity = 0
-        InputHandler(self) 
-        app.run()
+            self.app = Ursina()
+            sky = Sky()
+            self.rest.append(sky)
+
+
+            # sol
+            ground = Entity(
+                model='plane',
+                scale=400,
+                texture='grass',
+                texture_scale=(50, 50),
+                collider='box'
+            )
+            self.rest.append(ground)
+
+            window.exit_button.visible = False
+
+            self.set_state()
+            self.player = FirstPersonController()
+            self.rest.append(self.player)
+            self.player.gravity = 0
+            InputHandler(self)
+            self.app.run()
+
+        self.show = functools.partial(show, self)
     
+
