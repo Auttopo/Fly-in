@@ -121,7 +121,7 @@ class FlyinParser():
         nod[FUTUR] = self.futur
         return nod
 
-    def options_check(self, data: list[str], clean_data: list[Any]) -> None:
+    def options_check(self, data: list[str], clean_data: list[Any]) -> bool:
         """ checks options of a classic hub nod """
 
         basic_colors: list[str] = [
@@ -188,7 +188,11 @@ class FlyinParser():
                                 self.lnbr,
                                 "drones number is not an positive integer")
                 case _:
-                    ParserError.add_line(self.lnbr, self.ermsg)
+                    ParserError.add_line(self.lnbr,
+                                         f"unknow option '{sub_data[0]}'"
+                                         " ; use : normal, priority, "
+                                         "restricted or blocked"
+                                         )
         if not clean_data[ZONE]:
             clean_data[ZONE] = "normal"
         if not clean_data[MAX]:
@@ -199,6 +203,7 @@ class FlyinParser():
     def hub_parser(self, data: list[str]) -> tuple[list[Any], bool]:
         """ parse data of a hub setting """
 
+        max_log: bool = True
         self.ermsg = (
                 f"{data[0]}: not correcly set"
                 "; format-> 'hub_type': name x(int) y(int) "
@@ -210,14 +215,14 @@ class FlyinParser():
         if len(data) < 2:
             ParserError.add_line(self.lnbr,
                                  "unsetted data")
-            return clean_data
+            return (clean_data, max_log)
 
         sub_data: list[str] = data[1].split(' ')
         sub_data = [elem for elem in sub_data if elem]
 
         if len(sub_data) < 3:
             ParserError.add_line(self.lnbr, self.ermsg)
-            return clean_data
+            return (clean_data, max_log)
 
         if any(sub_data[0] == elem[NAME] for elem in self.all_data):
             ParserError.add_line(self.lnbr, "this name is already used")
@@ -227,7 +232,7 @@ class FlyinParser():
             xy: tuple[int, int] = (int(sub_data[1]), int(sub_data[2]))
             if any(xy == elem[XY] for elem in self.all_data):
                 ParserError.add_line(self.lnbr, "coordinates already used")
-                return clean_data
+                return (clean_data, max_log)
             clean_data[XY] = xy
 
             if len(sub_data) > 3:
@@ -240,7 +245,7 @@ class FlyinParser():
                     sub_data[case] = sub_data[case][:len(sub_data[case]) - 1]
                 else:
                     raise
-                max_log: bool = self.options_check(sub_data[3:], clean_data)
+                max_log = self.options_check(sub_data[3:], clean_data)
         except Exception:
             ParserError.add_line(self.lnbr, self.ermsg)
         return (clean_data, max_log)
@@ -306,8 +311,9 @@ class FlyinParser():
             cost = 1
         elif nod_1[ZONE] == "priority":
             cost = -0.5
-        bridge: list[Any] = self.link_bridge(nod_1, nod_2, cost, shared_max,
-                                  name2 + '-' + name1)
+        bridge: list[Any] = self.link_bridge(
+                        nod_1, nod_2, cost, shared_max,
+                        name2 + '-' + name1)
         bridge[XY] = (midx + sep, midy + sep)
         bridge[ZONE] = nod_1[ZONE]
 
@@ -316,8 +322,9 @@ class FlyinParser():
             cost = 1
         elif nod_2[ZONE] == "priority":
             cost = -0.5
-        bridge2: list[Any] = self.link_bridge(nod_2, nod_1, cost, shared_max,
-                                   name1 + '-' + name2)
+        bridge2: list[Any] = self.link_bridge(
+                        nod_2, nod_1, cost, shared_max,
+                        name1 + '-' + name2)
         bridge2[XY] = (midx - sep, midy - sep)
         bridge2[ZONE] = nod_2[ZONE]
         bridge[TWIN] = bridge2
@@ -414,7 +421,8 @@ class FlyinParser():
                 clean_data, max_log = self.hub_parser(data)
                 if not max_log:
                     clean_data[MAX].common = self.nb_drones
-                if clean_data[MAX].common < self.nb_drones:
+                if clean_data[MAX] and \
+                        clean_data[MAX].common < self.nb_drones:
                     ParserError.add_line(
                             self.lnbr,
                             "max_drones on start_hub "
@@ -427,10 +435,12 @@ class FlyinParser():
                     ParserError.add_line(
                             self.lnbr, "only one end_hub is possible")
                 self.one_end = True
+
                 clean_data, max_log = self.hub_parser(data)
                 if not max_log:
                     clean_data[MAX].common = self.nb_drones
-                if clean_data[MAX].common < self.nb_drones:
+                if clean_data[MAX] and \
+                        clean_data[MAX].common < self.nb_drones:
                     ParserError.add_line(
                             self.lnbr,
                             "max_drones on end_hub "
@@ -441,7 +451,7 @@ class FlyinParser():
             case _:
                 ParserError.add_line(
                         self.lnbr,
-                        f"Unknow key: '{data[0]}'"
+                        f"unknow key: '{data[0]}' "
                         "possible: hub, start_hub, end_hub, connection"
                         ", nb_drones"
                                      )

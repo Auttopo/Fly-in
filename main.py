@@ -12,7 +12,7 @@ def create_window(queue: Any, resolved: FlyinAlgorithm, i: list[int]) -> None:
 
 
     save_stderr = sys.stderr
-    #sys.stderr = StringIO()
+    sys.stderr = StringIO()
     i_vale: int = i[0]
     try:
         import display 
@@ -25,7 +25,6 @@ def create_window(queue: Any, resolved: FlyinAlgorithm, i: list[int]) -> None:
         if i[0] == i_vale:
             i[1] = "stop"
         queue.put(i)
-           # raise Exception("something get wrong during display")
 
 def main() -> None:
     """ main program exec process """
