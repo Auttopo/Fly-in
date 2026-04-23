@@ -70,6 +70,7 @@ class FlyinParser():
         self.all_bridge: list[list[Any]] = []
         self.one_start: bool = False
         self.one_end: bool = False
+        self.nb_nbd: bool = False
         self.lnbr: int = 0
         self.nb_drones: int = 0
         self.futur: FlyinParser.CommonData = self.CommonData(0)
@@ -405,6 +406,10 @@ class FlyinParser():
         data: list[str] = line.split(':')
         match data[0]:
             case "nb_drones":
+                if self.nb_nbd:
+                    ParserError.add_line(
+                            self.lnbr, "only one nb_drones line is possible")
+                self.nb_nbd = True
                 if self.lnbr == 1:
                     self.nb_drones = self.nb_drones_parser(data[1])
             case "hub":
