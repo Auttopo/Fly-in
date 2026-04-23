@@ -2,12 +2,13 @@
 from ursina import *
 import parser as FP
 from ursina.prefabs.first_person_controller import FirstPersonController
-from typing import Any
+from typing import Any, Callable
 import numpy as np
 import functools
 
 
 class StopUpdate(Exception):
+    """ basic class to stop ursina """
     pass
 
 def arc_entity(x1: int, z1: int, y1: int, x2: int, z2: int, y2: int) -> Any:
@@ -53,6 +54,8 @@ def get_colors() -> dict[tuple[int, int, int]]:
     "crimson": (180, 20, 45),
     "rainbow": (255, 255, 255),
     "beige": (210, 180, 140),}
+
+    elem: list[str]
     for elem in data.keys():
         data[elem] = (data[elem][0] / 255, data[elem][1] / 255, data[elem][2] / 255)
     return data
@@ -71,7 +74,7 @@ class InputHandler(Entity):
         super().__init__()
         self.stop: bool = False
         self.d: Any = display
-        self.stop = False
+        self.vis: int = 0
 
     def destroy_all(self) -> None:
         for nod in self.d.all_dist:
@@ -79,6 +82,8 @@ class InputHandler(Entity):
         for nod in self.d.all_max:
             destroy(nod)
         for nod in self.d.nods:
+            destroy(nod)
+        for nod in self.d.nods_dist:
             destroy(nod)
         for nod in self.d.arcs_list:
             destroy(nod)
@@ -90,18 +95,35 @@ class InputHandler(Entity):
         if key == 'escape':
             self.d.i[1] = "stop"
             self.stop = True
-            #application.quit()
 
         if key == 'o':
             for nod in self.d.nods_dist:
                 nod.visible = not nod.visible
             for nod in self.d.nods:
                 nod.visible = not nod.visible
+
         if key == 'i':
-            for nod in self.d.all_dist:
-                nod.visible = not nod.visible
-            for nod in self.d.all_max:
-                nod.visible = not nod.visible
+            
+            self.vis += 1
+            if self.vis == 1:
+                for nod in self.d.all_dist:
+                    nod.visible = True
+                for nod in self.d.all_max:
+                    nod.visible = False
+            elif self.vis == 2:
+                for nod in self.d.all_dist:
+                    nod.visible = False
+                for nod in self.d.all_max:
+                    nod.visible = True
+            elif self.vis == 3:
+                for nod in self.d.all_dist:
+                    nod.visible = False
+                for nod in self.d.all_max:
+                    nod.visible = False
+
+            if self.vis == 3:
+                self.vis = 0
+
 
         if key == 'n':
             if self.d.i[0] <= len(self.d.states) - 2:
@@ -143,40 +165,46 @@ class InputHandler(Entity):
 
 class FlyinDisplay:
 
-
-    def show_dist(self) -> None:
-        pass
-
-    
     def set_state(self) -> None:
 
-        mycolors = get_colors()
-        mycolors_dist = get_type_color()
+        mycolors: dict[str, tuple[int, int, int]] = get_colors()
+        mycolors_dist: dict[str, tuple[int, int, int]] = get_type_color()
         self.nods: list[Any] = []
         self.nods_dist: list[Any] = []
-        self.mydata = self.states[self.i[0]]
+        self.mydata: Any = self.states[self.i[0]]
         link_h:int = 4
-        espace = 8
+        espace: int = 8
         arcs_list: list[Any] = []
         self.all_dist: list[Any] = []
         self.all_max: list[Any] = []
+        str_dist: str
+        str_max: str
+        dist: Entity
+        maxi: Entity
+        d: Text
+        m: Text
+        txt: Entity
+        d_n: Text
 
-        ui = Text(
+        ui: Text = Text(
             text=str(self.i[0]),
             texture_scale=(50, 50),
             scale=1,
             origin=(-9,0))
         self.rest.append(ui)
 
+        elem: list[Any]
         for elem in self.mydata.all_data:
         # COLORED BASIC HUBS
+            x: int
+            y: int
+
             x,y = elem[FP.XY]
             x = x * espace
             y = y * espace
-            col = mycolors[elem[FP.COLOR]]
-            nod = Entity(
+            col: tuple[int, int, int] = mycolors[elem[FP.COLOR]]
+            nod: Entity = Entity(
                 model='sphere',
-
                 color=color.rgb(col[0], col[1], col[2]),
                 position=(x, 1, y)
             )
@@ -185,11 +213,17 @@ class FlyinDisplay:
             str_dist = str(elem[FP.DIST])
             dist = Entity(position=(x, 2.5, y), billboard=True)
             d = Text(text=str_dist, parent=dist, scale=20, origin=(0,0))
+            dist.visible = False
+            d.visible = False
+            self.all_dist.append(dist)
             self.all_dist.append(d)
-            str_dist = str(elem[FP.MAX].common)
-            dist = Entity(position=(x, 2.5, y), billboard=True)
-            m = Text(text=str_dist, parent=dist, scale=20, origin=(0,0))
-            m.visible = not m.visible
+
+            str_max = str(elem[FP.MAX].common)
+            maxi = Entity(position=(x, 2.5, y), billboard=True)
+            m = Text(text=str_max, parent=maxi, scale=20, origin=(0,0))
+            maxi.visible = False
+            m.visible = False
+            self.all_max.append(maxi)
             self.all_max.append(m)
 
 
@@ -201,20 +235,22 @@ class FlyinDisplay:
                 color=color.rgb(col[0], col[1], col[2]),
                 position=(x, 1, y)
             )
-            self.rest.append(nod)
             nod.visible = not nod.visible
             self.nods_dist.append(nod)
         
         # LINES CONNECTION
+            link: list[Any]
             for link in elem[FP.LINK]:
+                x2: int
+                y2: int
                 x2, y2 = link[FP.XY]
                 if link[FP.NAME] != elem[FP.NAME]:
                     arcs_list.append(arc_entity(x, link_h, y, x2 * espace, 1, y2 * espace))
 
         # DRONES BALLS
-            drones = elem[FP.DRONES].common
+            drones: int = elem[FP.DRONES].common
             if drones:
-                drones_balls = Entity(
+                drones_balls: Entity = Entity(
                     model='sphere',
                     world_space=True,
                     scale=0.3,
@@ -222,11 +258,14 @@ class FlyinDisplay:
                     position=(x, 3, y)
                 )
                 self.rest.append(drones_balls)
+
                 txt = Entity(position=(x, 3.2, y), billboard=True)
                 d_n = Text(text=str(drones), parent=txt, scale=20, origin=(0,0))
+                self.rest.append(txt)
                 self.rest.append(d_n)
 
         # LINKS
+        elem: list[Any]
         for elem in self.mydata.all_bridge:
             drones = elem[FP.DRONES].common
 
@@ -255,36 +294,41 @@ class FlyinDisplay:
                 self.rest.append(drones_balls)
                 txt = Entity(position=(x, link_h + 1.7, y), billboard=True)
                 d_n = Text(text=str(drones), parent=txt, scale=20, origin=(0,0))
+                self.rest.append(txt)
                 self.rest.append(d_n)
 
             str_dist = str(elem[FP.DIST])
             dist = Entity(position=(x, link_h + 1, y), billboard=True)
             d = Text(text=str_dist, parent=dist, scale=20, origin=(0,0))
+            dist.visible = False
+            d.visible = False
+            self.all_dist.append(dist)
             self.all_dist.append(d)
-            str_dist = str(elem[FP.MAX].common)
-            dist = Entity(position=(x, link_h + 1, y), billboard=True)
-            m = Text(text=str_dist, parent=dist, scale=20, origin=(0,0))
-            m.visible = not m.visible
+
+            str_max = str(elem[FP.MAX].common)
+            maxi = Entity(position=(x, link_h + 1, y), billboard=True)
+            m = Text(text=str_max, parent=maxi, scale=20, origin=(0,0))
+            maxi.visible = False
+            m.visible = False
+            self.all_max.append(maxi)
             self.all_max.append(m)
 
         self.arcs_list = arcs_list
 
-    def __init__(self, states: list[str], i: list[int]) -> None:
+    def __init__(self, states: list[Any], i: list[int | str]) -> None:
         """ init and display the graph """
-        self.states = states
+        self.states: list[Any] = states
         self.rest: list[Any] = []
 
         def show(self) -> None:
             nonlocal i
             self.i: int = i
 
-            self.app = Ursina()
-            sky = Sky()
+            self.app: Ursina = Ursina()
+            sky: Sky = Sky()
             self.rest.append(sky)
 
-
-            # sol
-            ground = Entity(
+            ground: Entity = Entity(
                 model='plane',
                 scale=400,
                 texture='grass',
@@ -296,12 +340,12 @@ class FlyinDisplay:
             window.exit_button.visible = False
 
             self.set_state()
-            self.player = FirstPersonController()
+            self.player: FirstPersonController = FirstPersonController()
             self.rest.append(self.player)
             self.player.gravity = 0
             InputHandler(self)
             self.app.run()
 
-        self.show = functools.partial(show, self)
+        self.show: Callable[..., None] = functools.partial(show, self)
     
 
