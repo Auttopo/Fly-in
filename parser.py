@@ -122,7 +122,7 @@ class FlyinParser():
         nod[FUTUR] = self.futur
         return nod
 
-    def options_check(self, data: list[str], clean_data: list[Any]) -> bool:
+    def options_check(self, data: list[str], clean_data: list[Any]) -> None:
         """ checks options of a classic hub nod """
 
         basic_colors: list[str] = [
@@ -147,7 +147,6 @@ class FlyinParser():
             "crimson",
             "rainbow",
             "beige"]
-        max_log: bool = True
 
         duplicate_ermsg: str = "duplicate parameter not alowed"
         elem: str
@@ -200,15 +199,9 @@ class FlyinParser():
                 case _:
                     ParserError.add_line(self.lnbr,
                                          f"unknow option '{sub_data[0]}'"
-                                         " ; use : normal, priority, "
-                                         "restricted or blocked"
+                                         " ; use : color, zone, "
+                                         "or max_drones"
                                          )
-        if not clean_data[ZONE]:
-            clean_data[ZONE] = "normal"
-        if not clean_data[MAX]:
-            max_log = False
-            clean_data[MAX] = self.CommonData(1)
-        return max_log
 
     def hub_parser(self, data: list[str]) -> tuple[list[Any], bool]:
         """ parse data of a hub setting """
@@ -255,9 +248,16 @@ class FlyinParser():
                     sub_data[case] = sub_data[case][:len(sub_data[case]) - 1]
                 else:
                     raise
-                max_log = self.options_check(sub_data[3:], clean_data)
+                self.options_check(sub_data[3:], clean_data)
         except Exception:
             ParserError.add_line(self.lnbr, self.ermsg)
+        if not clean_data[ZONE]:
+            clean_data[ZONE] = "normal"
+        if not clean_data[COLOR]:
+            clean_data[COLOR] = "blue"
+        if not clean_data[MAX]:
+            max_log = False
+            clean_data[MAX] = self.CommonData(1)
         return (clean_data, max_log)
 
     def linking_futur(
@@ -277,20 +277,27 @@ class FlyinParser():
                 new_operator = nod_2
         return new_operator
 
-    def link_bridge(
+    def create_bridge(
             self, dest: list[Any], src: list[Any],
-            cost: float, shared_max: Any,
-            name: str) -> list[Any]:
+            shared_max: Any, name: str) -> list[Any]:
         """ link a nod to another  """
 
+        cost: float = 0
+        if dest[ZONE] == "restricted":
+            cost = 1
+        elif dest[ZONE] == "priority":
+            cost = -0.5
+
         bridge: list[Any] = self.create_nod()
-        bridge[LINK].append(dest)
+        if not dest[ZONE] == "blocked":
+            bridge[LINK].append(dest)
         bridge[MAX] = shared_max
         bridge[COST] = cost
         bridge[NAME] = name
         src[LINK].append(bridge)
 
         self.all_bridge.append(bridge)
+        bridge[ZONE] = dest[ZONE]
         return bridge
 
     def linking(self, name1: str, name2: str, max_drones: float) -> None:
@@ -300,9 +307,6 @@ class FlyinParser():
                 (elem for elem in self.all_data if elem[NAME] == name1))
         nod_2: list[Any] = next(
                 (elem for elem in self.all_data if elem[NAME] == name2))
-
-        if nod_1[ZONE] == "blocked" or nod_2[ZONE] == "blocked":
-            return
 
         x1: int
         x2: int
@@ -316,27 +320,16 @@ class FlyinParser():
 
         shared_max: FlyinParser.CommonData = self.CommonData(max_drones)
 
-        cost: float = 0
-        if nod_1[ZONE] == "restricted":
-            cost = 1
-        elif nod_1[ZONE] == "priority":
-            cost = -0.5
-        bridge: list[Any] = self.link_bridge(
-                        nod_1, nod_2, cost, shared_max,
+        bridge: list[Any] = self.create_bridge(
+                        nod_1, nod_2, shared_max,
                         name2 + '-' + name1)
         bridge[XY] = (midx + sep, midy + sep)
-        bridge[ZONE] = nod_1[ZONE]
 
-        cost = 0
-        if nod_2[ZONE] == "restricted":
-            cost = 1
-        elif nod_2[ZONE] == "priority":
-            cost = -0.5
-        bridge2: list[Any] = self.link_bridge(
-                        nod_2, nod_1, cost, shared_max,
+        bridge2: list[Any] = self.create_bridge(
+                        nod_2, nod_1, shared_max,
                         name1 + '-' + name2)
+
         bridge2[XY] = (midx - sep, midy - sep)
-        bridge2[ZONE] = nod_2[ZONE]
         bridge[TWIN] = bridge2
         bridge2[TWIN] = bridge
         bridge[DRONES] = bridge2[DRONES]
@@ -365,7 +358,7 @@ class FlyinParser():
                 return
             if not any(names[1] == elem[NAME] for elem in self.all_data):
                 ParserError.add_line(
-                        self.lnbr, f"{names[0]} not found in data base")
+                        self.lnbr, f"{names[1]} not found in data base")
                 return
             link: frozenset[str] = frozenset((names[0], names[1]))
             if link in self.all_links:

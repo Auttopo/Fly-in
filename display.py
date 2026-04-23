@@ -15,15 +15,15 @@ def arc_entity(x1: int, z1: int, y1: int, x2: int, z2: int, y2: int) -> Any:
     points: list[Any] = []
     dx: int
     dy: int
-    dx, dy = x2 - x1, y2 - y1  # plan XZ
-    d: int = np.sqrt(dx**2 + dy**2)
+    dx, dy = x2 - x1, y2 - y1
+    d: float = np.sqrt(dx**2 + dy**2)
    
-    h: int = d / 2 / 2
-    i: int = 0
-    while i <= 1:
-        px = x2 - (x1 - x2) * i
-        py = y2 - (y1 - y2) * i
-        pz = z1 + (z2 - z1) * i
+    h: float = d / 2 / 2
+    i: float = 0
+    while i <= 1.01:
+        px = x1 + (x2 - x1) * i
+        py = y1 + (y2 - y1) * i
+        pz = z2 + (z1 - z2) * i
         pz = pz + h * (1 - ((i * 2 - 1) ** 2))
         points.append(Vec3(px, pz, py))
         i += 0.01
