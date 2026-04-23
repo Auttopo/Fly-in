@@ -162,6 +162,15 @@ class FlyinParser():
                             self.lnbr,
                             f"{sub_data[1]} not listed; "
                             "use known color: {basic_colors}")
+                    if sub_data[1] == "rainbow":
+                        print("Rainbow represent "
+                              "all colors of the light spectrum right ? "
+                              "The withe color contain "
+                              "all colors of the light spectrum !"
+                              f"{clean_data[NAME]} color set to white"
+                              )
+                        sub_data[1] = "white"
+
                     clean_data[COLOR] = sub_data[1]
                 case "zone":
                     if clean_data[ZONE]:
