@@ -87,7 +87,7 @@ class MainProcess:
 
         except Exception as e:
             print(f"An error occured :\n{e}", file=sys.stderr)
-            if traceback:
+            if trace:
                 traceback.print_exc()
 
 
