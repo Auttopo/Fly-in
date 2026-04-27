@@ -1,7 +1,12 @@
 
+max nod pour end et start = nb_drones ?
+verifier si blocked implemented
+->->-> implementer les links des blocked:
 
+check cars possibles du sujet pour name 
 
 preparer le live coding
+
 
 
 

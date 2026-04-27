@@ -8,7 +8,7 @@ run : $(TRACE)
 	. $(ENV)/bin/activate && \
 	python3 -m $(PROGRAM) $(FILE)
 
-install $(TRACE) : pyproject.toml
+install $(TRACE) : pyproject.toml Makefile
 	python3 -m venv $(ENV) && \
 	. $(ENV)/bin/activate && \
 	pip install --upgrade pip && \
@@ -38,12 +38,12 @@ fclean:
 
 lint :
 	. $(ENV)/bin/activate && \
-	python3 -m flake8 --exclude $(ENV),mlx_files; \
+	python3 -m flake8 --exclude $(ENV); \
 	python3 -m mypy . --explicit-package-bases --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
 lint-strict :
 	. $(ENV)/bin/activate && \
-	python3 -m flake8 --exclude $(ENV),mlx_files; \
+	python3 -m flake8 --exclude $(ENV); \
 	python3 -m mypy . --explicit-package-bases --strict
 
 .PHONY : install run debug clean fclean lint lint-strict

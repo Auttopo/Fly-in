@@ -1,7 +1,3 @@
-# CHALLENGER LEVEL: THE IMPOSSIBLE DREAM
-# WARNING: This map is designed to be extremely challenging and may not be solvable
-# by most algorithms. It's intended as a stress test and research challenge.
-# The goal is NOT to validate this map but to push algorithmic limits.
 nb_drones: 25
 
 # === LAYER 0: The Nightmare Begins ===
@@ -19,6 +15,10 @@ hub: gate_hell5 5 0 [color=red max_drones=1]
 hub: maze_trap_a1 1 1 [color=purple]
 hub: maze_trap_a2 2 1 [color=purple]
 hub: maze_trap_a3 3 1 [color=purple]
+
+hub: traap 10 10 [zone=blocked]
+connection: traap-maze_trap_a3
+
 hub: maze_dead_a 4 1 [color=black]
 
 hub: maze_trap_b1 1 -1 [color=purple]

@@ -1,5 +1,5 @@
 
-from typing import Any
+from typing import Any, TextIO
 from parser import FlyinParser, ParserError
 from dijkstra3d import FlyinAlgorithm
 import sys
@@ -8,15 +8,17 @@ import multiprocessing as mp
 from io import StringIO
 
 
-def create_window(queue: Any, resolved: FlyinAlgorithm, i: list[int], trace: bool = False) -> None:
+def create_window(
+            queue: Any, resolved: FlyinAlgorithm,
+            i: list[int | str], trace: bool = False) -> None:
 
-    save_stderr = sys.stderr
+    save_stderr: TextIO = sys.stderr
     if not trace:
         sys.stderr = StringIO()
-    i_vale: int = i[0]
+    i_vale: int = int(i[0])
     try:
-        import display 
-        disp = display.FlyinDisplay(resolved.states, i)
+        import display
+        disp: Any = display.FlyinDisplay(resolved.states, i)
         disp.show()
     except Exception as e:
         if trace:
@@ -29,22 +31,24 @@ def create_window(queue: Any, resolved: FlyinAlgorithm, i: list[int], trace: boo
             i[1] = "stop"
         queue.put(i)
 
+
 def main() -> None:
     """ main program exec process """
 
-    traceback: bool = False
+    trace: bool = False
     if len(sys.argv) > 2 and sys.argv[2] == "traceback":
-        traceback = True
+        trace = True
     try:
         if len(sys.argv) < 2:
             raise ParserError("Use as first argument a configuration file")
         obj: FlyinParser = FlyinParser(sys.argv[1])
         resolved: FlyinAlgorithm = FlyinAlgorithm(obj)
-        i: int = [0, ""]
+        i: list[int | str] = [0, ""]
 
         while i[1] != "stop":
-            q = mp.Queue()
-            process= mp.Process(target=create_window, args=(q, resolved, i, traceback))
+            q: Any = mp.Queue()
+            process = mp.Process(
+                    target=create_window, args=(q, resolved, i, trace))
             process.start()
             process.join()
             i = q.get()
@@ -53,6 +57,7 @@ def main() -> None:
         print(f"An error occured :\n{e}", file=sys.stderr)
         if traceback:
             traceback.print_exc()
+
 
 if __name__ == "__main__":
     main()
