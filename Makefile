@@ -27,12 +27,15 @@ debug :
 clean:
 	. $(ENV)/bin/activate && \
 	$(RM) -r __pycache__
+	$(RM) -r .mypy_cache
 
 fclean:
 	. $(ENV)/bin/activate && \
 	$(RM) -r __pycache__
+	$(RM) -r .mypy_cache
 	$(RM) .install_trace
 	$(RM) -r fly_in_env
+	$(RM) uv.lock
 
 #	$(RM) -r .mypy_cache
 

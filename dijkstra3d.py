@@ -20,6 +20,8 @@ class FlyinAlgorithm:
         print("DRONES ARRIVED", len(self.all_path), '\n')
 
     def create_futur(self, operator: list[Any]) -> list[Any]:
+        """ create a state map an link previous nods to it"""
+
         new_operator: list[Any]
 
         next_nod: FlyinParser = copy.deepcopy(self.base)
@@ -33,12 +35,16 @@ class FlyinAlgorithm:
         return new_operator
 
     def max_check(self, nod: list[Any]) -> bool:
+        """ basic check for bfs """
+
         if nod[FP.DRONES].common == \
                 nod[FP.MAX].common or nod[FP.MAX].common == 0:
             return False
         return True
 
     def prepare_futur(self, nod: list[Any], tree: list[Any]) -> None:
+        """ if next nod is blocked """
+        """ check distance to the futur nod dependingly of it"""
 
         if nod[FP.FUTUR].common == 0:
             unblocked = self.create_futur(nod)
@@ -55,6 +61,7 @@ class FlyinAlgorithm:
                     tree.append(futur_nod)
 
     def resolve(self, entry: list[Any]) -> None:
+        """ man process bfs / dijkstra3d ( with futurs nods link ) """
 
         tree: list[Any] = [entry]
         self.all_path: list[list[Any]] = []

@@ -16,6 +16,7 @@ class StopUpdate(Exception):
 
 
 def arc_entity(x1: int, z1: int, y1: int, x2: int, z2: int, y2: int) -> Any:
+    """ create an ursina arc beetwin two points """
 
     points: list[Any] = []
     dx: int
@@ -37,6 +38,8 @@ def arc_entity(x1: int, z1: int, y1: int, x2: int, z2: int, y2: int) -> Any:
 
 
 def get_colors() -> dict[str, tuple[float, float, float]]:
+    """ return all colors handle """
+
     data: dict[str, tuple[float, float, float]] = {
         "red": (220, 30, 30),
         "blue": (30, 100, 220),
@@ -57,7 +60,6 @@ def get_colors() -> dict[str, tuple[float, float, float]]:
         "maroon": (88, 20, 20),
         "darkred": (139, 0, 0),
         "crimson": (180, 20, 45),
-        "rainbow": (255, 255, 255),
         "beige": (210, 180, 140), }
 
     elem: str
@@ -68,6 +70,8 @@ def get_colors() -> dict[str, tuple[float, float, float]]:
 
 
 def get_type_color() -> dict[str, tuple[float, float, float]]:
+    """ return all color dependingly of the zone type """
+
     return {
             "priority": (220 / 255, 220 / 255, 220 / 255),  # white
             "restricted": (0, 0, 0),  # black
@@ -77,14 +81,19 @@ def get_type_color() -> dict[str, tuple[float, float, float]]:
 
 
 class InputHandler(ursina.Entity):  # type: ignore[misc, unused-ignore]
+    """ class to define keys beheviors """
 
     def __init__(self, display: Any) -> None:
+        """ basic init of the class """
+
         super().__init__()
         self.stop: bool = False
         self.d: Any = display
         self.vis: int = 0
 
     def destroy_all(self) -> None:
+        """ destroy all created ursina entities """
+
         for nod in self.d.all_dist:
             destroy(nod)
         for nod in self.d.all_max:
@@ -99,6 +108,7 @@ class InputHandler(ursina.Entity):  # type: ignore[misc, unused-ignore]
             destroy(nod)
 
     def input(self, key: Any) -> None:
+        """ add keys behaviors """
 
         if key == 'escape':
             self.d.i[1] = "stop"
@@ -157,6 +167,7 @@ class InputHandler(ursina.Entity):  # type: ignore[misc, unused-ignore]
                 self.stop = True
 
     def update(self) -> None:
+        """ change ursina update behaviors """
 
         if self.stop:
             self.destroy_all()
@@ -171,8 +182,10 @@ class InputHandler(ursina.Entity):  # type: ignore[misc, unused-ignore]
 
 
 class FlyinDisplay:
+    """ main class of the file """
 
     def set_state(self) -> None:
+        """ create all 3d objects of the graph """
 
         mycolors: dict[str, tuple[float, float, float]] = get_colors()
         mycolors_dist: dict[str, tuple[float, float, float]] = get_type_color()
@@ -333,6 +346,7 @@ class FlyinDisplay:
         self.player: FirstPersonController
 
         def show(self: Any) -> None:
+            """ main funtion, process all the diplay """
             self.i = i
 
             self.app = Ursina()

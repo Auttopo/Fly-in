@@ -11,6 +11,7 @@ from io import StringIO
 def create_window(
             queue: Any, resolved: FlyinAlgorithm,
             i: list[int | str], trace: bool = False) -> None:
+    """ process independant ursina launch"""
 
     save_stderr: TextIO = sys.stderr
     if not trace:
@@ -33,7 +34,7 @@ def create_window(
 
 
 def main() -> None:
-    """ main program exec process """
+    """ main program process """
 
     trace: bool = False
     if len(sys.argv) > 2 and sys.argv[2] == "traceback":
