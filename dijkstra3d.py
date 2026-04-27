@@ -8,8 +8,11 @@ import copy
 class FlyinAlgorithm:
     """ resolve the graph problem """
 
-    def __init__(self, obj: FlyinParser) -> None:
+    def __init__(self, obj: FlyinParser, t: Any) -> None:
         """ init and resolve the input """
+
+        self.success: bool = False
+        self.t: Any = t
         self.base: FlyinParser = obj
         self.states: list[FlyinParser] = [copy.deepcopy(obj)]
 
@@ -69,10 +72,14 @@ class FlyinAlgorithm:
         max_drones = self.states[0].nb_drones + 1
 
         while drones < max_drones:
+            if not self.t.check():
+                return
 
             tree = [entry]
             entry[FP.DIST] = 1
             while tree:
+                if not self.t.check():
+                    return
                 active = tree.pop(0)
                 if active[FP.DIST] == 0:
                     raise Exception("traitor among us")
@@ -157,3 +164,5 @@ class FlyinAlgorithm:
                         elem[FP.DIST] = 0
                     for elem in timeline.all_bridge:
                         elem[FP.DIST] = 0
+
+        self.success = True

@@ -3,10 +3,10 @@ from os.path import exists
 from typing import Any, TextIO
 
 # FTYPE
-CONNECTION: int = 1
-HUB: int = 2
-START_HUB: int = 3
-END_HUB: int = 4
+HUB: int = 1
+START_HUB: int = 2
+END_HUB: int = 3
+
 # algo core
 LINK: int = 0
 DIST: int = 1
@@ -226,6 +226,9 @@ class FlyinParser():
         if len(sub_data) < 3:
             ParserError.add_line(self.lnbr, self.ermsg)
             return (clean_data, max_log)
+
+        if '\\' in sub_data[0] or '/' in sub_data[0]:
+            ParserError.add_line(self.lnbr, "name can't contain dash")
 
         if any(sub_data[0] == elem[NAME] for elem in self.all_data):
             ParserError.add_line(self.lnbr, "this name is already used")
